@@ -17,6 +17,52 @@ def parse_args():
         help='Percentage of params to be pruned [0.0, 1.0)')
     return parser.parse_args()
 
+def clean():
+    files = ['ssd_vgg16.params', 
+             'ssd_vgg16_params.ids',
+             'sdd_vgg16_sorted_params.ids']
+    for f in files:
+        if os.path.isfile(f):
+            os.remove(f)
+
+def prune_network(proto, model, prune_percent):
+    net = load_net(proto, model)    
+    sys.stdout.write('Pruning network ... ')
+    sys.stdout.flush()
+    actual_prune_count = 0.0
+    expected_prune_count = 0.0
+    with open('sdd_vgg16_sorted_params.ids', 'r') as f:
+        for idx in f:
+            idx = idx.strip('\n')
+            idx = idx.split('-')
+            if len(idx) == 5:
+                name, n, c, h, w = idx
+                n, c, h, w = int(n), int(c), int(h), int(w)
+                net.params[name][0].data[n,c,h,w] = 0.0
+                actual_prune_count += 1
+            elif len(idx) == 2:
+                name, n = idx
+                n = int(n)
+                if len(net.params[name]) == 2:
+                    net.params[name][1].data[n] = 0.0
+                    actual_prune_count += 1
+                elif len(net.params[name]) == 1:
+                    net.params[name][0].data[n] = 0.0
+                    actual_prune_count += 1
+            expected_prune_count += 1
+    print 'done!'
+    print 'Number of parameters pruned: '\
+          '{} Million (expected), {} Million (actual)'.format(
+           expected_prune_count/1e6, actual_prune_count/1e6)
+    save_path = os.path.basename(model).replace('.caffemodel', '')
+    save_path = '{}_Pruned_{}%.caffemodel'.format(save_path, int(prune_percent*100))
+    save_path = os.path.join(os.path.dirname(model), 'pruned', save_path)
+    save_dir = os.path.dirname(save_path)
+    if not os.path.isdir(save_dir):
+        os.makedirs(save_dir)
+    net.save(save_path)
+    print 'Pruned model saved at {}'.format(save_path)
+
 def save_sorted_indices(num_params, prune_percent):
     with open('ssd_vgg16.params', 'r') as f:
         params = []
@@ -93,6 +139,12 @@ def main(args):
     
     # saved subset of sorted indices
     save_sorted_indices(num_params, args.prune_percent)
+
+    # prune network
+    prune_network(args.proto, args.model, args.prune_percent)
+
+    # clean up
+    clean()
     
 if __name__=='__main__':
     main(parse_args())
