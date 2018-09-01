@@ -331,6 +331,8 @@ class Layer {
   Phase phase_;
   /** The vector that stores the learnable parameters as a set of blobs. */
   vector<shared_ptr<Blob<Dtype> > > blobs_;
+  /** The vector for storing masks of pruned/clusterd layer. */
+  vector<shared_ptr<Blob<unsigned int> > > masks_;
   /** Vector indicating whether to compute the diff of each param blob. */
   vector<bool> param_propagate_down_;
 
