@@ -184,6 +184,13 @@ class Layer {
   }
 
   /**
+   * @brief Returns the vector of prune/cluster mask blobs.
+   */
+  vector<shared_ptr<Blob<unsigned int> > >& masks() {
+    return masks_;
+  }
+
+  /**
    * @brief Returns the layer parameter.
    */
   const LayerParameter& layer_param() const { return layer_param_; }
