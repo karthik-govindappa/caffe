@@ -373,4 +373,19 @@ void caffe_cpu_scale<double>(const int n, const double alpha, const double *x,
   cblas_dscal(n, alpha, y, 1);
 }
 
+template <typename Dtype>
+void caffe_cpu_fill_prune_mask(const int n, const Dtype* x, unsigned int* mask) {
+    for (int i = 0; i < n; ++i) {
+        if (x[i]==0) {
+            mask[i] = 0;
+        }
+    }
+}
+
+template <>
+void caffe_cpu_fill_prune_mask<float>(const int n, const float* x, unsigned int* mask);
+
+template <>
+void caffe_cpu_fill_prune_mask<double>(const int n, const double* x, unsigned int* mask);
+
 }  // namespace caffe
