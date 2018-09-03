@@ -437,7 +437,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 147 (last added: recurrent_param)
+// LayerParameter next available layer-specific ID: 148 (last added: pruning_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -527,6 +527,7 @@ message LayerParameter {
   optional PowerParameter power_param = 122;
   optional PReLUParameter prelu_param = 131;
   optional PriorBoxParameter prior_box_param = 203;
+  optional PruningParameter pruning_param = 147;
   optional PythonParameter python_param = 130;
   optional RecurrentParameter recurrent_param = 146;
   optional ReductionParameter reduction_param = 136;
@@ -1423,6 +1424,13 @@ message PriorBoxParameter {
 
   // Offset to the top left corner of each cell.
   optional float offset = 13 [default = 0.5];
+}
+
+message PruningParameter {
+  // Fill weights mask of pruned layer
+  optional bool fill_prune_mask_weights = 1 [default = false];
+  // Fill bias mask of pruned layer
+  optional bool fill_prune_mask_bias = 2 [default = false];
 }
 
 message PythonParameter {
