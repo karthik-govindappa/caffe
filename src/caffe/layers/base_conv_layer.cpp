@@ -182,12 +182,26 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     shared_ptr<Filler<Dtype> > weight_filler(GetFiller<Dtype>(
         this->layer_param_.convolution_param().weight_filler()));
     weight_filler->Fill(this->blobs_[0].get());
+    // Initialize weight mask
+    if (train_pruned_layer_ && weights_pruned_) {
+      this->masks_[0].reset(new Blob<unsigned int>(weight_shape));
+      caffe_set<unsigned int>(this->blobs_[0]->count(), (unsigned int)1,
+        this->masks_[0]->mutable_cpu_data());
+      LOG(INFO) << "Initialized weights mask : " << this->masks_[0]->shape_string();
+    }
+
     // If necessary, initialize and fill the biases.
     if (bias_term_) {
       this->blobs_[1].reset(new Blob<Dtype>(bias_shape));
       shared_ptr<Filler<Dtype> > bias_filler(GetFiller<Dtype>(
           this->layer_param_.convolution_param().bias_filler()));
       bias_filler->Fill(this->blobs_[1].get());
+      // Initialize bias mask
+      if (train_pruned_layer_ || bias_pruned_) {
+        this->masks_[1].reset(new Blob<unsigned int>(bias_shape));
+        caffe_set<unsigned int>(this->blobs_[1]->count(), (unsigned int)1,
+            this->masks_[1]->mutable_cpu_data());
+      }
     }
   }
   kernel_dim_ = this->blobs_[0]->count(1);
