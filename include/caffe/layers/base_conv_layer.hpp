@@ -95,6 +95,8 @@ class BaseConvolutionLayer : public Layer<Dtype> {
 
   bool bias_pruned_;
   bool weights_pruned_;
+  bool filled_prune_mask_bias_;
+  bool filled_prune_mask_weights_;
   bool train_pruned_layer_;
 
  private:
