@@ -187,7 +187,8 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       this->masks_[0].reset(new Blob<unsigned int>(weight_shape));
       caffe_set<unsigned int>(this->blobs_[0]->count(), (unsigned int)1,
         this->masks_[0]->mutable_cpu_data());
-      LOG(INFO) << "Initialized weights mask : " << this->masks_[0]->shape_string();
+      filled_prune_mask_weights_ = false;
+      LOG(INFO) << "Initialized pruning mask of weights : " << this->masks_[0]->shape_string();
     }
 
     // If necessary, initialize and fill the biases.
@@ -201,6 +202,8 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
         this->masks_[1].reset(new Blob<unsigned int>(bias_shape));
         caffe_set<unsigned int>(this->blobs_[1]->count(), (unsigned int)1,
             this->masks_[1]->mutable_cpu_data());
+        filled_prune_mask_bias_ = false;
+        LOG(INFO) << "Initialized pruning mask of bias : " << this->masks_[0]->shape_string();
       }
     }
   }
