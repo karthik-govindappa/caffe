@@ -25,6 +25,21 @@ template <typename Dtype>
 void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   const Dtype* weight = this->blobs_[0]->cpu_data();
+  // fill prune masks if layer is pruned
+  if(this->train_pruned_layer_ && this->weights_pruned_ && !this->filled_prune_mask_weights_) {
+     caffe_cpu_fill_prune_mask(this->blobs_[0]->count(), this->blobs_[0]->cpu_data(),
+            this->masks_[0]->mutable_cpu_data());
+     this->filled_prune_mask_weights_ = true;
+    LOG(INFO) << "Filled pruning mask of weights";
+  }
+  
+  if(this->bias_term_ && this->train_pruned_layer_ && this->bias_pruned_ && !this->filled_prune_mask_bias_) {
+     caffe_cpu_fill_prune_mask(this->blobs_[1]->count(), this->blobs_[1]->cpu_data(),
+            this->masks_[1]->mutable_cpu_data());
+     this->filled_prune_mask_bias_ = true;
+    LOG(INFO) << "Filled pruning mask of bias";
+  }
+
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* top_data = top[i]->mutable_cpu_data();
