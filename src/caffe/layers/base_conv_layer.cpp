@@ -138,6 +138,12 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   for (int i = 0; i < num_spatial_axes_; ++i) {
     weight_shape.push_back(kernel_shape_data[i]);
   }
+
+  // Pruning parameters
+  bias_pruned_ = this->layer_param_.pruning_param().fill_prune_mask_bias();
+  weights_pruned_ = this->layer_param_.pruning_param().fill_prune_mask_weights();
+  train_pruned_layer_ = bias_pruned_ || weights_pruned_;
+ 
   bias_term_ = this->layer_param_.convolution_param().bias_term();
   vector<int> bias_shape(bias_term_, num_output_);
   if (this->blobs_.size() > 0) {
@@ -161,6 +167,14 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       this->blobs_.resize(2);
     } else {
       this->blobs_.resize(1);
+    }
+    // Resize prune masks w.r.t blobs
+    if (train_pruned_layer_) {
+        if (bias_pruned_ && weights_pruned_ && this->blobs_.size() == 2) {
+            this->masks_.resize(2);
+        } else if ((bias_pruned_ || weights_pruned_) && this->blobs_.size() >= 1) {
+            this->masks_.resize(1);
+        }
     }
     // Initialize and fill the weights:
     // output channels x input channels per-group x kernel height x kernel width
