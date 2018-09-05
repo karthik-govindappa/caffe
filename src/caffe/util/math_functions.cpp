@@ -382,10 +382,10 @@ void caffe_cpu_fill_prune_mask(const int n, const Dtype* x, unsigned int* mask) 
     }
 }
 
-template <>
+template
 void caffe_cpu_fill_prune_mask<float>(const int n, const float* x, unsigned int* mask);
 
-template <>
+template
 void caffe_cpu_fill_prune_mask<double>(const int n, const double* x, unsigned int* mask);
 
 }  // namespace caffe
