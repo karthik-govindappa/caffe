@@ -164,6 +164,18 @@ void caffe_mul<double>(const int n, const double* a, const double* b,
 }
 
 template <>
+void caffe_mul<float>(const int n, const float* a, const unsigned int* b,
+    float* y) {
+  vsMul(n, a, (const float*)b, y);
+}
+
+template <>
+void caffe_mul<double>(const int n, const double* a, const unsigned int* b,
+    double* y) {
+  vdMul(n, a, (const double*)b, y);
+}
+
+template <>
 void caffe_div<float>(const int n, const float* a, const float* b,
     float* y) {
   vsDiv(n, a, b, y);
