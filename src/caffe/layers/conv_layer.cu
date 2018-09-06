@@ -8,6 +8,20 @@ template <typename Dtype>
 void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   const Dtype* weight = this->blobs_[0]->gpu_data();
+   // fill prune masks if layer is pruned
+  if(this->train_pruned_layer_ && this->weights_pruned_ && !this->filled_prune_mask_weights_) {
+     caffe_cpu_fill_prune_mask(this->blobs_[0]->count(), this->blobs_[0]->cpu_data(),
+            this->masks_[0]->mutable_cpu_data());
+     this->filled_prune_mask_weights_ = true;
+    LOG(INFO) << "Filled pruning mask of weights";
+  }
+  if(this->bias_term_ && this->train_pruned_layer_ && this->bias_pruned_ && !this->filled_prune_mask_bias_) {
+     caffe_cpu_fill_prune_mask(this->blobs_[1]->count(), this->blobs_[1]->cpu_data(),
+            this->masks_[1]->mutable_cpu_data());
+     this->filled_prune_mask_bias_ = true;
+    LOG(INFO) << "Filled pruning mask of bias";
+  }
+
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->gpu_data();
     Dtype* top_data = top[i]->mutable_gpu_data();
@@ -52,6 +66,17 @@ void ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         }
       }
     }
+  }
+  // Drop gradients if pruned layer is being trained
+  if(this->train_pruned_layer_ && this->weights_pruned_ && this->filled_prune_mask_weights_ && this->param_propagate_down_[0]) {
+    caffe_gpu_mul(this->blobs_[0]->count(), this->blobs_[0]->gpu_diff(),
+          this->masks_[0]->gpu_data(), this->blobs_[0]->mutable_gpu_diff());
+    //LOG(INFO) << "Dropping gradients of weights";
+  }
+  if(this->bias_term_ && this->train_pruned_layer_ && this->bias_pruned_ && this->filled_prune_mask_bias_ && this->param_propagate_down_[1]) {
+     caffe_gpu_mul(this->blobs_[1]->count(), this->blobs_[1]->gpu_diff(),
+          this->masks_[1]->gpu_data(), this->blobs_[1]->mutable_gpu_diff());
+    //LOG(INFO) << "Dropping gradients of bias";
   }
 }
 
