@@ -29,6 +29,7 @@ def UnpackVariable(var, num):
 
 def ConvBNLayer(net, from_layer, out_layer, use_bn, use_relu, num_output,
     kernel_size, pad, stride, dilation=1, use_scale=True, lr_mult=1,
+    use_prune_mask_weights=False, use_prune_mask_bias=False,
     conv_prefix='', conv_postfix='', bn_prefix='', bn_postfix='_bn',
     scale_prefix='', scale_postfix='_scale', bias_prefix='', bias_postfix='_bias',
     **bn_params):
@@ -81,12 +82,23 @@ def ConvBNLayer(net, from_layer, out_layer, use_bn, use_relu, num_output,
           'filler': dict(type='constant', value=0.0),
           }
   else:
-    kwargs = {
-        'param': [
-            dict(lr_mult=lr_mult, decay_mult=1),
-            dict(lr_mult=2 * lr_mult, decay_mult=0)],
-        'weight_filler': dict(type='xavier'),
-        'bias_filler': dict(type='constant', value=0)
+    if use_prune_mask_weights or use_prune_mask_bias:
+        kwargs = {
+            'param': [dict(lr_mult=1, decay_mult=1), dict(lr_mult=2, decay_mult=0)],
+            'pruning_param': dict(
+                fill_prune_mask_weights=use_prune_mask_weights,
+                fill_prune_mask_bias=use_prune_mask_bias
+            ),
+            'weight_filler': dict(type='xavier'),
+            'bias_filler': dict(type='constant', value=0)
+        }
+    else:
+        kwargs = {
+            'param': [
+                dict(lr_mult=lr_mult, decay_mult=1),
+                dict(lr_mult=2 * lr_mult, decay_mult=0)],
+            'weight_filler': dict(type='xavier'),
+            'bias_filler': dict(type='constant', value=0)
         }
 
   conv_name = '{}{}{}'.format(conv_prefix, out_layer, conv_postfix)
